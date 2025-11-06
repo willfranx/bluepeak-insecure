@@ -1,0 +1,282 @@
+### Check server root
+GET http://localhost:8000
+Accept: application/json
+
+### ================= USERS =================
+
+### Register a new user (should fail as password does not meet the password policy)
+POST http://localhost:8000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "ahmed",
+  "email": "ahmed@me.com",
+  "password": "book123"
+}
+
+###
+
+### Register a new user
+POST http://localhost:8000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "ahmed",
+  "email": "ahmed@me.com",
+  "password": "Book123Worm%%"
+}
+
+###
+
+### Register another user
+POST http://localhost:8000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Obi1",
+  "email": "Obiwan1@me.com",
+  "password": "helloThere1*"
+}
+
+###
+
+### Login user
+POST http://localhost:8000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ahmed@me.com",
+  "password": "Book123Worm%%"
+}
+
+###
+
+
+### Get my profile
+GET http://localhost:8000/api/auth/profile
+Accept: application/json
+Cookie: token=<JWT_TOKEN>
+
+###
+
+### Logout user
+POST http://localhost:8000/api/auth/logout
+Content-Type: application/json
+
+###
+
+
+### ================ test lockout ================
+### run this five times (wrong pass)
+POST http://localhost:8000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "Obiwan1@me.com",
+  "password": "password"
+}
+
+###
+
+### Logout user
+POST http://localhost:8000/api/auth/logout
+Content-Type: application/json
+
+###
+
+
+### try and login (should fail) try again after 1 minute should work
+POST http://localhost:8000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "Obiwan1@me.com",
+  "password": "helloThere1*"
+}
+
+###
+
+### ================= BANK ACCOUNTS =================
+
+### Create a new checking account for a user
+POST http://localhost:8000/api/accounts
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "userid": 1,
+  "type": "checking",
+  "balance": 500
+}
+
+###
+
+### Create a new saving account for a user
+POST http://localhost:8000/api/accounts
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "userid": 12,
+  "type": "saving",
+  "balance": 1000
+}
+
+###
+
+### Get all accounts for user 1
+GET http://localhost:8000/api/accounts/1
+Accept: application/json
+Cookie: token=<JWT_TOKEN>
+
+###
+
+### Test case: Missing type or userid should fail
+POST http://localhost:8000/api/accounts
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "userid": 1
+}
+
+###
+
+### Test case: Invalid account type should fail
+POST http://localhost:8000/api/accounts
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "userid": 1,
+  "type": "money",
+  "balance": 500
+}
+
+###
+
+### Test case: Attempt to delete account with transactions should fail
+DELETE http://localhost:8000/api/accounts/1
+Accept: application/json
+
+###
+
+### ================= INSECURE USERS =================
+
+### Register insecure user (for testing only)
+POST http://localhost:8000/api/auth/insecure/register
+Content-Type: application/json
+
+{
+  "name": "lab_insecure",
+  "email": "insecure@example.test",
+  "password": "insecurePass123"
+}
+
+###
+
+### Login insecure user (for testing only)
+POST http://localhost:8000/api/auth/insecure/login
+Content-Type: application/json
+
+{
+  "email": "insecure@example.test",
+  "password": "insecurePass123"
+}
+
+###
+
+### ================= TRANSACTIONS AND TRANSFERS =================
+
+### Transfer money between accounts
+POST http://localhost:8000/api/transactions
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "srcid": 1,
+  "desid": 2,
+  "amount": 150.00
+}
+
+###
+
+### Get all transactions
+GET http://localhost:8000/api/transactions
+Accept: application/json
+Cookie: token=<JWT_TOKEN>
+
+###
+
+### Get specific transaction by ID
+GET http://localhost:8000/api/transactions/1
+Accept: application/json
+Cookie: token=<JWT_TOKEN>
+
+###
+
+### Deposit money into an account
+POST http://localhost:8000/api/accounts/deposit
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "accountid": 1,
+  "amount": 200
+}
+
+###
+
+### Withdraw money from an account
+POST http://localhost:8000/api/accounts/withdraw
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "accountid": 1,
+  "amount": 100
+}
+
+###
+
+### Get transactions for a specific account
+GET http://localhost:8000/api/transactions/1
+Accept: application/json
+Cookie: token=<JWT_TOKEN>
+
+###
+
+### Test deposit negative amount (should fail)
+POST http://localhost:8000/api/accounts/deposit
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "accountid": 1,
+  "amount": -50
+}
+
+###
+
+### Test withdraw more than balance (should fail)
+POST http://localhost:8000/api/accounts/withdraw
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "accountid": 1,
+  "amount": 100000
+}
+
+###
+
+### Transfer money to self (should fail)
+POST http://localhost:8000/api/transactions
+Content-Type: application/json
+Cookie: token=<JWT_TOKEN>
+
+{
+  "srcid": 1,
+  "desid": 1,
+  "amount": 50
+}
