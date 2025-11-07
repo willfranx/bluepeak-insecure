@@ -149,7 +149,22 @@ function App() {
               path="/profile"
               element={
                 user ? (
-                  <Profile user={user} />
+                  <Profile
+                    user={user}
+                    onUserUpdate={(updated) => {
+                      // update top-level user and persist
+                      setUser(updated);
+                      try {
+                        if (updated && updated.userid) {
+                          window.localStorage.setItem("bluepeak_user", JSON.stringify(updated));
+                        } else {
+                          window.localStorage.removeItem("bluepeak_user");
+                        }
+                      } catch (err) {
+                        console.warn("Failed to persist updated user", err);
+                      }
+                    }}
+                  />
                 ) : (
                   <Navigate to="/login" replace />
                 )

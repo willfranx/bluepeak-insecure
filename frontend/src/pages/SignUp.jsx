@@ -103,6 +103,10 @@ export default function SignUp({ onLogin }) {
             </button>
           </div>
         </form>
+        <div className="mt-4 text-sm text-center">
+          <span className="text-gray-600">Already have an account? </span>
+          <button onClick={() => navigate('/login')} className="text-blue-600 hover:underline">Sign in</button>
+        </div>
       </div>
     </div>
   );

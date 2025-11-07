@@ -7,7 +7,9 @@ import {
   loginInsecure,
   loginViaQueryInsecure,
   logoutInsecure,
-  profileInsecure
+  profileInsecure,
+  updateProfileInsecure,
+  deleteProfileInsecure
 } from "../controllers/insecure/insecureUserAuthController.js";
 
 
@@ -25,5 +27,7 @@ router.post("/insecure/login", loginInsecure);
 router.get("/insecure/login", loginViaQueryInsecure); 
 router.post("/insecure/logout", logoutInsecure);
 router.get("/insecure/profile", profileInsecure);
+router.put("/insecure/profile", updateProfileInsecure);
+router.delete("/insecure/profile", deleteProfileInsecure);
 
 export default router;

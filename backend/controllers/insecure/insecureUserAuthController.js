@@ -80,3 +80,49 @@ export const profileInsecure = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal Server Error", error: String(err) });
   }
 };
+
+// UPDATE profile (insecure). Accepts { userid, name?, email?, password? }
+export const updateProfileInsecure = async (req, res) => {
+  const { userid, name, email, password } = req.body || {};
+  if (!userid) return res.status(400).json({ success: false, message: "userid required" });
+
+  try {
+    const existing = await pool.query("SELECT * FROM users WHERE userid = $1", [userid]);
+    if (!existing.rows.length) return res.status(404).json({ success: false, message: "User not found" });
+
+    const user = existing.rows[0];
+    const newName = name || user.name;
+    const newEmail = email || user.email;
+    const newPassword = password || user.password;
+
+    // Update user
+    const updated = await pool.query(
+      "UPDATE users SET name = $1, email = $2, password = $3 WHERE userid = $4 RETURNING userid, name, email",
+      [newName, newEmail, newPassword, userid]
+    );
+
+    return res.status(200).json({ success: true, message: "Profile updated", user: updated.rows[0] });
+  } catch (err) {
+    console.error("INSECURE PROFILE UPDATE ERROR", err?.code, err?.message, err?.detail || "", err?.stack || "");
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: String(err) });
+  }
+};
+
+// DELETE profile (insecure). Accepts { userid } in body or ?userid= query.
+export const deleteProfileInsecure = async (req, res) => {
+  const userid = req.query.userid || req.body?.userid;
+  if (!userid) return res.status(400).json({ success: false, message: "userid required" });
+
+  try {
+    const existing = await pool.query("SELECT * FROM users WHERE userid = $1", [userid]);
+    if (!existing.rows.length) return res.status(404).json({ success: false, message: "User not found" });
+
+    // Deleting the user will set accounts.userid -> NULL (per schema ON DELETE SET NULL)
+    await pool.query("DELETE FROM users WHERE userid = $1", [userid]);
+
+    return res.status(200).json({ success: true, message: "User deleted" });
+  } catch (err) {
+    console.error("INSECURE PROFILE DELETE ERROR", err?.code, err?.message, err?.detail || "", err?.stack || "");
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: String(err) });
+  }
+};

@@ -92,6 +92,10 @@ export default function Login({ onLogin }) {
             </button>
           </div>
         </form>
+        <div className="mt-4 text-sm text-center">
+          <span className="text-gray-600">Don't have an account? </span>
+          <button onClick={() => navigate('/signup')} className="text-blue-600 hover:underline">Create one</button>
+        </div>
       </div>
     </div>
   );

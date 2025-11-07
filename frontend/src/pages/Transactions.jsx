@@ -54,7 +54,7 @@ export default function Transactions({ user, accounts = [] }) {
               className="px-3 py-2 rounded-md bg-gray-900 text-gray-100"
             >
               {accounts.map((a) => (
-                <option key={a.accountid || a.id} value={a.accountid || a.id}>
+                <option key={a.accountid} value={a.accountid}>
                   {a.type || `Account ${a.accountid || a.id}`} (${Number(a.balance || 0).toFixed(2)})
                 </option>
               ))}
@@ -71,8 +71,9 @@ export default function Transactions({ user, accounts = [] }) {
             <thead>
               <tr className="border-b border-gray-700">
                 <th className="py-2">ID</th>
-                <th className="py-2">Source</th>
-                <th className="py-2">Destination</th>
+                <th className="py-2">Type</th>
+                <th className="py-2">Source (acct type)</th>
+                <th className="py-2">Destination (acct type)</th>
                 <th className="py-2">Amount</th>
               </tr>
             </thead>
@@ -85,14 +86,27 @@ export default function Transactions({ user, accounts = [] }) {
                 </tr>
               )}
 
-              {transactions.map((t) => (
-                <tr key={t.transactionid} className="border-b border-gray-700">
-                  <td className="py-2">{t.transactionid}</td>
-                  <td className="py-2">{t.srcid}</td>
-                  <td className="py-2">{t.desid}</td>
-                  <td className="py-2">${Number(t.amount).toFixed(2)}</td>
-                </tr>
-              ))}
+              {transactions.map((t) => {
+                // Prefer the account types returned by the API (src_type/des_type). If missing,
+                // fall back to looking up the account in the provided `accounts` prop.
+                const srcAcc = accounts.find(a => String(a.accountid) === String(t.srcid));
+                const desAcc = accounts.find(a => String(a.accountid) === String(t.desid));
+                const srcType = t.src_type || (srcAcc && srcAcc.type) || '-';
+                const desType = t.des_type || (desAcc && desAcc.type) || '-';
+                // If the source is the system account (id=1) show the transaction type instead
+                const SYS_ID = 1;
+                const srcLabel = Number(t.srcid) === SYS_ID ? (t.type || '-') : `${t.srcid} (${srcType})`;
+                const desLabel = Number(t.desid) === SYS_ID ? (t.type || '-') : `${t.desid} (${desType})`;
+                return (
+                  <tr key={t.transactionid} className="border-b border-gray-700">
+                    <td className="py-2">{t.transactionid}</td>
+                    <td className="py-2">{t.type || '-'} </td>
+                    <td className="py-2">{srcLabel}</td>
+                    <td className="py-2">{desLabel}</td>
+                    <td className="py-2">${Number(t.amount).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     srcid INTEGER NOT NULL,
     desid INTEGER NOT NULL,
     amount NUMERIC(12,2) DEFAULT 0.01,
+    type VARCHAR(10) NOT NULL DEFAULT 'transfer',
     --no negative transfer amounts
     CHECK (amount > 0.00),
     --sourceAccount cannot be destinationAccount

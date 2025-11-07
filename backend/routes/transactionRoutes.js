@@ -1,7 +1,7 @@
 import express from "express"
 import { protect } from "../middleware/authProtectMiddleware.js"
 import {deposit, withdraw, transfer, getTransactions } from "../controllers/transactionController.js"
-import { depositInsecure, withdrawInsecure, transferInsecure, getTransactionsInsecure} from "../controllers/insecure/insecureTransactionController.js"
+import { depositInsecure, withdrawInsecure, transferInsecure, transferToUserInsecure, getTransactionsInsecure} from "../controllers/insecure/insecureTransactionController.js"
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.get("/:accountid", protect, getTransactions)
 router.post("/insecure/deposit", depositInsecure)
 router.post("/insecure/withdraw", withdrawInsecure)
 router.post("/insecure/transfer", transferInsecure)
+router.post("/insecure/transfer-to-user", transferToUserInsecure)
 router.get("/insecure/:accountid", getTransactionsInsecure)
 
 export default router
