@@ -1,2 +1,2 @@
-# bluepeak-bank
-a simple banking web app used to demonstrate security vulnerabilities, test malicious attacks, and mitigations against them.
+# bluepeak-insecure
+This is the bluepeak app with vulnerabilities and exposures checked in for pen testing. 
