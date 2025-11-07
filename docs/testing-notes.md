@@ -183,15 +183,6 @@ curl -i -X POST "`**<BASE>**`/api/auth/register" \
 The insecure controllers reproduce real vulnerabilities: SQLi, IDOR, password leaks, and stored XSS. Secure controllers correctly enforce auth and sanitize or reject dangerous input. I aligned the insecure demos with our current DB so the curl tests reproduce the expected insecure behavior for demos and grading.
 
 
-Table summarizing work 
-**Vulnerability   	            Insecure Result                               	  Secure Result**
-SQLi	                        Auth bypass returns first user	                  Rejects invalid credentials
-IDOR	                        Any account accessible	                          requires auth token -> 401 Unauthorized.
-Password Exposure	            Passwords/hashes returned	                        Excludes sensitive fields
-Stored XSS	                  Script stored/executed	                          Input is sanitized/rejected
-CSRF	                        Cookie based POST request succeeds	              Token/header required
-
-
 **Next steps:**
 A. Task: Implement fixes for remaining vulnerabilities and test mitigations
 1) Insecure deserialization  
