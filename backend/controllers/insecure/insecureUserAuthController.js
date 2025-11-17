@@ -126,3 +126,14 @@ export const deleteProfileInsecure = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal Server Error", error: String(err) });
   }
 };
+
+// INSECURE DESERIALIZE DEMO
+export const deserializeInsecure = (req, res) => {
+  // blindly trust whatever JSON the client sends (no validation)
+  const body = req.body || {};
+  return res.status(200).json({
+    success: true,
+    message: "Deserialized object (insecure)",
+    received: body,
+  });
+};
