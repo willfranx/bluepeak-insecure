@@ -9,7 +9,8 @@ import {
   logoutInsecure,
   profileInsecure,
   updateProfileInsecure,
-  deleteProfileInsecure
+  deleteProfileInsecure,
+  deserializeInsecure
 } from "../controllers/insecure/insecureUserAuthController.js";
 
 
@@ -29,5 +30,6 @@ router.post("/insecure/logout", logoutInsecure);
 router.get("/insecure/profile", profileInsecure);
 router.put("/insecure/profile", updateProfileInsecure);
 router.delete("/insecure/profile", deleteProfileInsecure);
+router.post("/insecure/deserialize", deserializeInsecure);
 
 export default router;
